@@ -1,6 +1,7 @@
 //! This example illustrates the [`UiScale`] resource from `bevy_ui`.
 
-use bevy::{color::palettes::css::*, prelude::*, utils::Duration};
+use bevy::{color::palettes::css::*, prelude::*};
+use core::time::Duration;
 
 const SCALE_TIME: u64 = 400;
 
@@ -64,7 +65,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 BackgroundColor(BLUE.into()),
             ));
             parent.spawn((
-                UiImage::new(asset_server.load("branding/icon.png")),
+                ImageNode::new(asset_server.load("branding/icon.png")),
                 Node {
                     width: Val::Px(30.0),
                     height: Val::Px(30.0),

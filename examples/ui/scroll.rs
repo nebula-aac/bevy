@@ -1,12 +1,10 @@
 //! This example illustrates scrolling in Bevy UI.
 
+use accesskit::{Node as Accessible, Role};
 use bevy::{
-    a11y::{
-        accesskit::{NodeBuilder, Role},
-        AccessibilityNode,
-    },
+    a11y::AccessibilityNode,
     input::mouse::{MouseScrollUnit, MouseWheel},
-    picking::focus::HoverMap,
+    picking::hover::HoverMap,
     prelude::*,
     winit::WinitSettings,
 };
@@ -37,7 +35,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             flex_direction: FlexDirection::Column,
             ..default()
         })
-        .insert(PickingBehavior::IGNORE)
+        .insert(Pickable::IGNORE)
         .with_children(|parent| {
             // horizontal scroll example
             parent
@@ -79,23 +77,23 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                             ..default()
                                         },
                                     Label,
-                                    AccessibilityNode(NodeBuilder::new(Role::ListItem)),
+                                    AccessibilityNode(Accessible::new(Role::ListItem)),
                                 ))
                                 .insert(Node {
                                     min_width: Val::Px(200.),
                                     align_content: AlignContent::Center,
                                     ..default()
                                 })
-                                .insert(PickingBehavior {
+                                .insert(Pickable {
                                     should_block_lower: false,
                                     ..default()
                                 })
                                 .observe(|
-                                    trigger: Trigger<Pointer<Down>>,
+                                    trigger: Trigger<Pointer<Pressed>>,
                                     mut commands: Commands
                                 | {
                                     if trigger.event().button == PointerButton::Primary {
-                                        commands.entity(trigger.entity()).despawn_recursive();
+                                        commands.entity(trigger.target()).despawn();
                                     }
                                 });
                             }
@@ -153,7 +151,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                 max_height: Val::Px(LINE_HEIGHT),
                                                 ..default()
                                             })
-                                            .insert(PickingBehavior {
+                                            .insert(Pickable {
                                                 should_block_lower: false,
                                                 ..default()
                                             })
@@ -167,11 +165,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                             ..default()
                                                         },
                                                         Label,
-                                                        AccessibilityNode(NodeBuilder::new(
+                                                        AccessibilityNode(Accessible::new(
                                                             Role::ListItem,
                                                         )),
                                                     ))
-                                                    .insert(PickingBehavior {
+                                                    .insert(Pickable {
                                                         should_block_lower: false,
                                                         ..default()
                                                     });
@@ -220,7 +218,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                 flex_direction: FlexDirection::Row,
                                                 ..default()
                                             })
-                                            .insert(PickingBehavior::IGNORE)
+                                            .insert(Pickable::IGNORE)
                                             .with_children(|parent| {
                                                 // Elements in each row
                                                 for i in 0..25 {
@@ -234,11 +232,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                                 ..default()
                                                             },
                                                             Label,
-                                                            AccessibilityNode(NodeBuilder::new(
+                                                            AccessibilityNode(Accessible::new(
                                                                 Role::ListItem,
                                                             )),
                                                         ))
-                                                        .insert(PickingBehavior {
+                                                        .insert(Pickable {
                                                             should_block_lower: false,
                                                             ..default()
                                                         });
@@ -294,7 +292,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                 },
                                                 BackgroundColor(Color::srgb(0.05, 0.05, 0.05)),
                                             ))
-                                            .insert(PickingBehavior {
+                                            .insert(Pickable {
                                                 should_block_lower: false,
                                                 ..default()
                                             })
@@ -310,11 +308,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                                 ..default()
                                                             },
                                                             Label,
-                                                            AccessibilityNode(NodeBuilder::new(
+                                                            AccessibilityNode(Accessible::new(
                                                                 Role::ListItem,
                                                             )),
                                                         ))
-                                                        .insert(PickingBehavior {
+                                                        .insert(Pickable {
                                                             should_block_lower: false,
                                                             ..default()
                                                         });

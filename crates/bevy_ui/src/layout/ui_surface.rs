@@ -3,10 +3,10 @@ use core::fmt;
 use taffy::TaffyTree;
 
 use bevy_ecs::{
-    entity::{Entity, EntityHashMap},
+    entity::{hash_map::EntityHashMap, Entity},
     prelude::Resource,
 };
-use bevy_math::UVec2;
+use bevy_math::{UVec2, Vec2};
 use bevy_utils::default;
 
 use crate::{layout::convert, LayoutContext, LayoutError, Measure, MeasureArgs, Node, NodeMeasure};
@@ -51,8 +51,7 @@ impl fmt::Debug for UiSurface {
 
 impl Default for UiSurface {
     fn default() -> Self {
-        let mut taffy: TaffyTree<NodeMeasure> = TaffyTree::new();
-        taffy.disable_rounding();
+        let taffy: TaffyTree<NodeMeasure> = TaffyTree::new();
         Self {
             entity_to_taffy: Default::default(),
             camera_entity_to_taffy: Default::default(),
@@ -276,14 +275,35 @@ impl UiSurface {
 
     /// Get the layout geometry for the taffy node corresponding to the ui node [`Entity`].
     /// Does not compute the layout geometry, `compute_window_layouts` should be run before using this function.
-    pub fn get_layout(&self, entity: Entity) -> Result<&taffy::Layout, LayoutError> {
-        if let Some(taffy_node) = self.entity_to_taffy.get(&entity) {
-            self.taffy
-                .layout(*taffy_node)
-                .map_err(LayoutError::TaffyError)
+    /// On success returns a pair consisting of the final resolved layout values after rounding
+    /// and the size of the node after layout resolution but before rounding.
+    pub fn get_layout(
+        &mut self,
+        entity: Entity,
+        use_rounding: bool,
+    ) -> Result<(taffy::Layout, Vec2), LayoutError> {
+        let Some(taffy_node) = self.entity_to_taffy.get(&entity) else {
+            return Err(LayoutError::InvalidHierarchy);
+        };
+
+        if use_rounding {
+            self.taffy.enable_rounding();
         } else {
-            Err(LayoutError::InvalidHierarchy)
+            self.taffy.disable_rounding();
         }
+
+        let out = match self.taffy.layout(*taffy_node).cloned() {
+            Ok(layout) => {
+                self.taffy.disable_rounding();
+                let taffy_size = self.taffy.layout(*taffy_node).unwrap().size;
+                let unrounded_size = Vec2::new(taffy_size.width, taffy_size.height);
+                Ok((layout, unrounded_size))
+            }
+            Err(taffy_error) => Err(LayoutError::TaffyError(taffy_error)),
+        };
+
+        self.taffy.enable_rounding();
+        out
     }
 }
 
@@ -443,7 +463,10 @@ mod tests {
         );
     }
 
-    #[allow(unreachable_code)]
+    #[expect(
+        unreachable_code,
+        reason = "Certain pieces of code tested here cause the test to fail if made reachable; see #16362 for progress on fixing this"
+    )]
     #[test]
     fn test_remove_camera_entities() {
         let mut ui_surface = UiSurface::default();
@@ -492,7 +515,10 @@ mod tests {
         assert_eq!(root_node_pair, None);
     }
 
-    #[allow(unreachable_code)]
+    #[expect(
+        unreachable_code,
+        reason = "Certain pieces of code tested here cause the test to fail if made reachable; see #16362 for progress on fixing this"
+    )]
     #[test]
     fn test_remove_entities() {
         let mut ui_surface = UiSurface::default();
@@ -572,7 +598,10 @@ mod tests {
         assert_eq!(ui_surface.taffy.parent(child_node), Some(parent_node));
     }
 
-    #[allow(unreachable_code)]
+    #[expect(
+        unreachable_code,
+        reason = "Certain pieces of code tested here cause the test to fail if made reachable; see #16362 for progress on fixing this"
+    )]
     #[test]
     fn test_set_camera_children() {
         let mut ui_surface = UiSurface::default();

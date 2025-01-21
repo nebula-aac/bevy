@@ -26,6 +26,7 @@ use bevy_ecs::{
     system::{lifetimeless::Read, Commands, Query, Res, ResMut, Resource},
     world::{FromWorld, World},
 };
+use bevy_image::BevyDefault as _;
 use bevy_math::ops;
 use bevy_reflect::{prelude::ReflectDefault, Reflect};
 use bevy_render::{
@@ -48,15 +49,16 @@ use bevy_render::{
     renderer::{RenderContext, RenderDevice},
     sync_component::SyncComponentPlugin,
     sync_world::RenderEntity,
-    texture::{BevyDefault, CachedTexture, TextureCache},
+    texture::{CachedTexture, TextureCache},
     view::{
         prepare_view_targets, ExtractedView, Msaa, ViewDepthTexture, ViewTarget, ViewUniform,
         ViewUniformOffset, ViewUniforms,
     },
     Extract, ExtractSchedule, Render, RenderApp, RenderSet,
 };
-use bevy_utils::{info_once, prelude::default, warn_once};
+use bevy_utils::{default, once};
 use smallvec::SmallVec;
+use tracing::{info, warn};
 
 use crate::{
     core_3d::{
@@ -117,9 +119,6 @@ pub struct DepthOfField {
     /// or background are.
     pub max_depth: f32,
 }
-
-#[deprecated(since = "0.15.0", note = "Renamed to `DepthOfField`")]
-pub type DepthOfFieldSettings = DepthOfField;
 
 /// Controls the appearance of the effect.
 #[derive(Clone, Copy, Default, PartialEq, Debug, Reflect)]
@@ -383,7 +382,9 @@ impl ViewNode for DepthOfFieldNode {
                     auxiliary_dof_texture,
                     view_bind_group_layouts.dual_input.as_ref(),
                 ) else {
-                    warn_once!("Should have created the auxiliary depth of field texture by now");
+                    once!(warn!(
+                        "Should have created the auxiliary depth of field texture by now"
+                    ));
                     continue;
                 };
                 render_context.render_device().create_bind_group(
@@ -425,7 +426,9 @@ impl ViewNode for DepthOfFieldNode {
             // `prepare_auxiliary_depth_of_field_textures``.
             if pipeline_render_info.is_dual_output {
                 let Some(auxiliary_dof_texture) = auxiliary_dof_texture else {
-                    warn_once!("Should have created the auxiliary depth of field texture by now");
+                    once!(warn!(
+                        "Should have created the auxiliary depth of field texture by now"
+                    ));
                     continue;
                 };
                 color_attachments.push(Some(RenderPassColorAttachment {
@@ -806,6 +809,7 @@ impl SpecializedRenderPipeline for DepthOfFieldPipeline {
                 },
                 targets,
             }),
+            zero_initialize_workgroup_memory: false,
         }
     }
 }
@@ -816,9 +820,9 @@ fn extract_depth_of_field_settings(
     mut query: Extract<Query<(RenderEntity, &DepthOfField, &Projection)>>,
 ) {
     if !DEPTH_TEXTURE_SAMPLING_SUPPORTED {
-        info_once!(
+        once!(info!(
             "Disabling depth of field on this platform because depth textures aren't supported correctly"
-        );
+        ));
         return;
     }
 

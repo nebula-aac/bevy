@@ -11,19 +11,19 @@ use bevy::{
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, FrameTimeDiagnosticsPlugin))
+        .add_plugins((DefaultPlugins, FrameTimeDiagnosticsPlugin::default()))
         .add_systems(Startup, setup)
         .add_systems(Update, (text_update_system, text_color_system))
         .run();
 }
 
-// A unit struct to help identify the FPS UI component, since there may be many Text components
+// Marker struct to help identify the FPS UI component, since there may be many Text components
 #[derive(Component)]
 struct FpsText;
 
-// A unit struct to help identify the color-changing Text component
+// Marker struct to help identify the color-changing Text component
 #[derive(Component)]
-struct ColorText;
+struct AnimatedText;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // UI camera
@@ -47,7 +47,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             right: Val::Px(5.0),
             ..default()
         },
-        ColorText,
+        AnimatedText,
     ));
 
     // Text with multiple sections
@@ -116,7 +116,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-fn text_color_system(time: Res<Time>, mut query: Query<&mut TextColor, With<ColorText>>) {
+fn text_color_system(time: Res<Time>, mut query: Query<&mut TextColor, With<AnimatedText>>) {
     for mut text_color in &mut query {
         let seconds = time.elapsed_secs();
 

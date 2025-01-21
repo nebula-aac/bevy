@@ -4,12 +4,18 @@
     html_logo_url = "https://bevyengine.org/assets/icon.png",
     html_favicon_url = "https://bevyengine.org/assets/icon.png"
 )]
+#![no_std]
 
 //! Input functionality for the [Bevy game engine](https://bevyengine.org/).
 //!
 //! # Supported input devices
 //!
 //! `bevy` currently supports keyboard, mouse, gamepad, and touch inputs.
+
+#[cfg(feature = "std")]
+extern crate std;
+
+extern crate alloc;
 
 mod axis;
 mod button_input;
@@ -57,7 +63,7 @@ use gamepad::{
     gamepad_connection_system, gamepad_event_processing_system, GamepadAxis,
     GamepadAxisChangedEvent, GamepadButton, GamepadButtonChangedEvent,
     GamepadButtonStateChangedEvent, GamepadConnection, GamepadConnectionEvent, GamepadEvent,
-    GamepadInfo, GamepadInput, GamepadRumbleRequest, GamepadSettings, RawGamepadAxisChangedEvent,
+    GamepadInput, GamepadRumbleRequest, GamepadSettings, RawGamepadAxisChangedEvent,
     RawGamepadButtonChangedEvent, RawGamepadEvent,
 };
 
@@ -142,7 +148,6 @@ impl Plugin for InputPlugin {
                 .register_type::<GamepadButtonChangedEvent>()
                 .register_type::<GamepadAxisChangedEvent>()
                 .register_type::<GamepadButtonStateChangedEvent>()
-                .register_type::<GamepadInfo>()
                 .register_type::<GamepadConnection>()
                 .register_type::<GamepadSettings>()
                 .register_type::<GamepadAxis>()
