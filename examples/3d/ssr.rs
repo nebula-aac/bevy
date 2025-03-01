@@ -5,19 +5,17 @@ use std::ops::Range;
 use bevy::{
     color::palettes::css::{BLACK, WHITE},
     core_pipeline::{fxaa::Fxaa, Skybox},
+    image::{
+        ImageAddressMode, ImageFilterMode, ImageLoaderSettings, ImageSampler,
+        ImageSamplerDescriptor,
+    },
     input::mouse::MouseWheel,
     math::{vec3, vec4},
     pbr::{
         DefaultOpaqueRendererMethod, ExtendedMaterial, MaterialExtension, ScreenSpaceReflections,
     },
     prelude::*,
-    render::{
-        render_resource::{AsBindGroup, ShaderRef, ShaderType},
-        texture::{
-            ImageAddressMode, ImageFilterMode, ImageLoaderSettings, ImageSampler,
-            ImageSamplerDescriptor,
-        },
-    },
+    render::render_resource::{AsBindGroup, ShaderRef, ShaderType},
 };
 
 /// This example uses a shader source file from the assets subdirectory
@@ -340,7 +338,6 @@ fn move_camera(
 }
 
 // Adjusts app settings per user input.
-#[allow(clippy::too_many_arguments)]
 fn adjust_app_settings(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,

@@ -3,12 +3,13 @@ use crate::{
     oit::OrderIndependentTransparencySettings,
 };
 use bevy_app::Plugin;
-use bevy_asset::{load_internal_asset, Handle};
+use bevy_asset::{load_internal_asset, weak_handle, Handle};
 use bevy_derive::Deref;
 use bevy_ecs::{
-    entity::{EntityHashMap, EntityHashSet},
+    entity::{hash_map::EntityHashMap, hash_set::EntityHashSet},
     prelude::*,
 };
+use bevy_image::BevyDefault as _;
 use bevy_render::{
     render_resource::{
         binding_types::{storage_buffer_sized, texture_depth_2d, uniform_buffer},
@@ -18,16 +19,16 @@ use bevy_render::{
         Shader, ShaderDefVal, ShaderStages, TextureFormat,
     },
     renderer::{RenderAdapter, RenderDevice},
-    texture::BevyDefault,
     view::{ExtractedView, ViewTarget, ViewUniform, ViewUniforms},
     Render, RenderApp, RenderSet,
 };
-use bevy_utils::tracing::warn;
+use tracing::warn;
 
 use super::OitBuffers;
 
 /// Shader handle for the shader that sorts the OIT layers, blends the colors based on depth and renders them to the screen.
-pub const OIT_RESOLVE_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(7698420424769536);
+pub const OIT_RESOLVE_SHADER_HANDLE: Handle<Shader> =
+    weak_handle!("562d2917-eb06-444d-9ade-41de76b0f5ae");
 
 /// Contains the render node used to run the resolve pass.
 pub mod node;
@@ -124,7 +125,6 @@ pub struct OitResolvePipelineKey {
     layer_count: i32,
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn queue_oit_resolve_pipeline(
     mut commands: Commands,
     pipeline_cache: Res<PipelineCache>,
@@ -208,6 +208,7 @@ fn specialize_oit_resolve_pipeline(
         depth_stencil: None,
         multisample: MultisampleState::default(),
         push_constant_ranges: vec![],
+        zero_initialize_workgroup_memory: false,
     }
 }
 
