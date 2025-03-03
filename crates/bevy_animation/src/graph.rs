@@ -1,7 +1,9 @@
 //! The animation graph, which allows animations to be blended together.
 
-use core::iter;
-use core::ops::{Index, IndexMut, Range};
+use core::{
+    iter,
+    ops::{Index, IndexMut, Range},
+};
 use std::io::{self, Write};
 
 use bevy_asset::{
@@ -12,11 +14,12 @@ use bevy_ecs::{
     component::Component,
     event::EventReader,
     reflect::ReflectComponent,
-    system::{Res, ResMut, Resource},
+    resource::Resource,
+    system::{Res, ResMut},
 };
+use bevy_platform_support::collections::HashMap;
 use bevy_reflect::{prelude::ReflectDefault, Reflect, ReflectSerialize};
-use bevy_utils::HashMap;
-use derive_more::derive::{Display, Error, From};
+use derive_more::derive::From;
 use petgraph::{
     graph::{DiGraph, NodeIndex},
     Direction,
@@ -24,6 +27,7 @@ use petgraph::{
 use ron::de::SpannedError;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
+use thiserror::Error;
 
 use crate::{AnimationClip, AnimationTargetId};
 
@@ -217,9 +221,8 @@ pub enum AnimationNodeType {
     /// additively.
     ///
     /// The weights of all the children of this node are *not* normalized to
-    /// 1.0. Rather, the first child is used as a base, ignoring its weight,
-    /// while the others are multiplied by their respective weights and then
-    /// added in sequence to the base.
+    /// 1.0. Rather, each child is multiplied by its respective weight and
+    /// added in sequence.
     ///
     /// Add nodes are primarily useful for superimposing an animation for a
     /// portion of a rig on top of the main animation. For example, an add node
@@ -238,18 +241,18 @@ pub struct AnimationGraphAssetLoader;
 
 /// Various errors that can occur when serializing or deserializing animation
 /// graphs to and from RON, respectively.
-#[derive(Error, Display, Debug, From)]
+#[derive(Error, Debug)]
 pub enum AnimationGraphLoadError {
     /// An I/O error occurred.
-    #[display("I/O")]
-    Io(io::Error),
+    #[error("I/O")]
+    Io(#[from] io::Error),
     /// An error occurred in RON serialization or deserialization.
-    #[display("RON serialization")]
-    Ron(ron::Error),
+    #[error("RON serialization")]
+    Ron(#[from] ron::Error),
     /// An error occurred in RON deserialization, and the location of the error
     /// is supplied.
-    #[display("RON serialization")]
-    SpannedRon(SpannedError),
+    #[error("RON serialization")]
+    SpannedRon(#[from] SpannedError),
 }
 
 /// Acceleration structures for animation graphs that allows Bevy to evaluate
@@ -420,7 +423,7 @@ impl AnimationGraph {
         Self {
             graph,
             root,
-            mask_groups: HashMap::new(),
+            mask_groups: HashMap::default(),
         }
     }
 
@@ -881,10 +884,10 @@ impl ThreadedAnimationGraph {
 
         self.sorted_edge_ranges.clear();
         self.sorted_edge_ranges
-            .extend(iter::repeat(0..0).take(node_count));
+            .extend(iter::repeat_n(0..0, node_count));
 
         self.computed_masks.clear();
-        self.computed_masks.extend(iter::repeat(0).take(node_count));
+        self.computed_masks.extend(iter::repeat_n(0, node_count));
     }
 
     /// Recursively constructs the [`ThreadedAnimationGraph`] for the subtree

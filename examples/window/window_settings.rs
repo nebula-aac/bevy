@@ -1,12 +1,13 @@
 //! Illustrates how to change window settings and shows how to affect
 //! the mouse pointer in various ways.
 
+#[cfg(feature = "custom_cursor")]
+use bevy::winit::cursor::{CustomCursor, CustomCursorImage};
 use bevy::{
-    core::FrameCount,
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    diagnostic::{FrameCount, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
     window::{CursorGrabMode, PresentMode, SystemCursorIcon, WindowLevel, WindowTheme},
-    winit::cursor::{CursorIcon, CustomCursor},
+    winit::cursor::CursorIcon,
 };
 
 fn main() {
@@ -36,7 +37,7 @@ fn main() {
                 ..default()
             }),
             LogDiagnosticsPlugin::default(),
-            FrameTimeDiagnosticsPlugin,
+            FrameTimeDiagnosticsPlugin::default(),
         ))
         .add_systems(Startup, init_cursor_icons)
         .add_systems(
@@ -152,16 +153,21 @@ fn toggle_theme(mut window: Single<&mut Window>, input: Res<ButtonInput<KeyCode>
 #[derive(Resource)]
 struct CursorIcons(Vec<CursorIcon>);
 
-fn init_cursor_icons(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn init_cursor_icons(
+    mut commands: Commands,
+    #[cfg(feature = "custom_cursor")] asset_server: Res<AssetServer>,
+) {
     commands.insert_resource(CursorIcons(vec![
         SystemCursorIcon::Default.into(),
         SystemCursorIcon::Pointer.into(),
         SystemCursorIcon::Wait.into(),
         SystemCursorIcon::Text.into(),
-        CustomCursor::Image {
+        #[cfg(feature = "custom_cursor")]
+        CustomCursor::Image(CustomCursorImage {
             handle: asset_server.load("branding/icon.png"),
             hotspot: (128, 128),
-        }
+            ..Default::default()
+        })
         .into(),
     ]));
 }

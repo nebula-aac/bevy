@@ -7,13 +7,13 @@ use bevy::{
         fxaa::Fxaa,
         prepass::{DeferredPrepass, DepthPrepass, MotionVectorPrepass, NormalPrepass},
     },
+    image::ImageLoaderSettings,
     math::ops,
     pbr::{
         CascadeShadowConfigBuilder, DefaultOpaqueRendererMethod, DirectionalLightShadowMap,
         NotShadowCaster, NotShadowReceiver, OpaqueRendererMethod,
     },
     prelude::*,
-    render::texture::ImageLoaderSettings,
 };
 
 fn main() {
@@ -280,7 +280,6 @@ enum DefaultRenderMode {
     ForwardPrepass,
 }
 
-#[allow(clippy::too_many_arguments)]
 fn switch_mode(
     mut text: Single<&mut Text>,
     mut commands: Commands,

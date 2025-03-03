@@ -13,7 +13,7 @@ use ktx2::{
     BasicDataFormatDescriptor, ChannelTypeQualifiers, ColorModel, DataFormatDescriptorHeader,
     Header, SampleInformation,
 };
-use wgpu::{
+use wgpu_types::{
     AstcBlock, AstcChannel, Extent3d, TextureDimension, TextureFormat, TextureViewDescriptor,
     TextureViewDimension,
 };
@@ -266,7 +266,7 @@ pub fn ktx2_buffer_to_image(
     // error cases have been handled
     let mut image = Image::default();
     image.texture_descriptor.format = texture_format;
-    image.data = wgpu_data.into_iter().flatten().collect::<Vec<_>>();
+    image.data = Some(wgpu_data.into_iter().flatten().collect::<Vec<_>>());
     image.texture_descriptor.size = Extent3d {
         width,
         height,
@@ -641,7 +641,7 @@ pub fn ktx2_dfd_to_texture_format(
                         && sample_information[2].channel_type == 2
                         && sample_information[2].bit_length == 10
                     {
-                        TextureFormat::Rg11b10Float
+                        TextureFormat::Rg11b10Ufloat
                     } else if sample_information[0].channel_type == 0
                         && sample_information[0].bit_length == 9
                         && sample_information[1].channel_type == 1
@@ -1276,7 +1276,7 @@ pub fn ktx2_format_to_texture_format(
         ktx2::Format::R32G32B32A32_SINT => TextureFormat::Rgba32Sint,
         ktx2::Format::R32G32B32A32_SFLOAT => TextureFormat::Rgba32Float,
 
-        ktx2::Format::B10G11R11_UFLOAT_PACK32 => TextureFormat::Rg11b10Float,
+        ktx2::Format::B10G11R11_UFLOAT_PACK32 => TextureFormat::Rg11b10Ufloat,
         ktx2::Format::E5B9G9R9_UFLOAT_PACK32 => TextureFormat::Rgb9e5Ufloat,
 
         ktx2::Format::X8_D24_UNORM_PACK32 => TextureFormat::Depth24Plus,
@@ -1502,7 +1502,7 @@ mod tests {
 
     #[test]
     fn test_ktx_levels() {
-        // R8UnormSrgb textture with 4x4 pixels data and 3 levels of mipmaps
+        // R8UnormSrgb texture with 4x4 pixels data and 3 levels of mipmaps
         let buffer = vec![
             0xab, 0x4b, 0x54, 0x58, 0x20, 0x32, 0x30, 0xbb, 0x0d, 10, 0x1a, 10, 0x0f, 0, 0, 0, 1,
             0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 0, 0,
