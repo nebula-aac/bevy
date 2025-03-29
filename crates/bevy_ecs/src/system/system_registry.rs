@@ -9,7 +9,7 @@ use crate::{
 use alloc::boxed::Box;
 use bevy_ecs_macros::{Component, Resource};
 #[cfg(feature = "bevy_reflect")]
-use bevy_reflect::Reflect;
+use bevy_reflect::{std_traits::ReflectDefault, Reflect};
 use core::marker::PhantomData;
 use thiserror::Error;
 
@@ -33,7 +33,7 @@ impl<I, O> RegisteredSystem<I, O> {
 /// Marker [`Component`](bevy_ecs::component::Component) for identifying [`SystemId`] [`Entity`]s.
 #[derive(Component, Default)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-#[cfg_attr(feature = "bevy_reflect", reflect(Component))]
+#[cfg_attr(feature = "bevy_reflect", reflect(Component, Default))]
 pub struct SystemIdMarker;
 
 /// A system that has been removed from the registry.
@@ -351,13 +351,15 @@ impl World {
             initialized = true;
         }
 
-        let result = if system.validate_param(self) {
+        let result = if system.validate_param(self).is_ok() {
             // Wait to run the commands until the system is available again.
             // This is needed so the systems can recursively run themselves.
             let ret = system.run_without_applying_deferred(input, self);
             system.queue_deferred(self.into());
             Ok(ret)
         } else {
+            // TODO: do we want to differentiate between failed validation and skipped systems?
+            // Do we want to better unify this with system error handling?
             Err(RegisteredSystemError::InvalidParams(id))
         };
 
@@ -862,7 +864,7 @@ mod tests {
         fn system(_: Res<T>) {}
 
         let mut world = World::new();
-        let id = world.register_system(system.warn_param_missing());
+        let id = world.register_system(system);
         // This fails because `T` has not been added to the world yet.
         let result = world.run_system(id);
 
@@ -893,5 +895,14 @@ mod tests {
         world.run_system(id).unwrap();
 
         assert_eq!(INVOCATIONS_LEFT.get(), 0);
+    }
+
+    #[test]
+    fn run_system_exclusive_adapters() {
+        let mut world = World::new();
+        fn system(_: &mut World) {}
+        world.run_system_cached(system).unwrap();
+        world.run_system_cached(system.pipe(system)).unwrap();
+        world.run_system_cached(system.map(|()| {})).unwrap();
     }
 }
