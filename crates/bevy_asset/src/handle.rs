@@ -129,7 +129,7 @@ impl core::fmt::Debug for StrongHandle {
 ///
 /// [`Handle::Strong`], via [`StrongHandle`] also provides access to useful [`Asset`] metadata, such as the [`AssetPath`] (if it exists).
 #[derive(Reflect)]
-#[reflect(Default, Debug, Hash, PartialEq)]
+#[reflect(Default, Debug, Hash, PartialEq, Clone)]
 pub enum Handle<A: Asset> {
     /// A "strong" reference to a live (or loading) [`Asset`]. If a [`Handle`] is [`Handle::Strong`], the [`Asset`] will be kept
     /// alive until the [`Handle`] is dropped. Strong handles also provide access to additional asset metadata.
@@ -150,7 +150,10 @@ impl<T: Asset> Clone for Handle<T> {
 
 impl<A: Asset> Handle<A> {
     /// Create a new [`Handle::Weak`] with the given [`u128`] encoding of a [`Uuid`].
-    #[deprecated = "use the `weak_handle!` macro with a UUID string instead"]
+    #[deprecated(
+        since = "0.16.0",
+        note = "use the `weak_handle!` macro with a UUID string instead"
+    )]
     pub const fn weak_from_u128(value: u128) -> Self {
         Handle::Weak(AssetId::Uuid {
             uuid: Uuid::from_u128(value),
